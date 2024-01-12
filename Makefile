@@ -1,7 +1,5 @@
-.PHONY: build run test clean
-
 # The name of your application
-APP_NAME = task-manager-api
+APP_NAME = task-forge
 
 # The go compiler to use
 GO = go
@@ -15,5 +13,10 @@ run: build
 test:
 	$(GO) test -v ./...
 
+coverage:
+	$(GO) test --race -coverprofile=coverage.txt -covermode=atomic ./...
+
 clean:
-	rm -f $(APP_NAME)
+	rm -f $(APP_NAME) coverage.txt
+
+.PHONY: build run test clean coverage

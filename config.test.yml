@@ -1,0 +1,31 @@
+server:
+  keepaliveperiodsecond: 0
+  listenaddr: "localhost"
+  # port: 8080
+
+  ssl:
+    enable: false
+    redirecttohttps: false
+    listenaddr: ""
+    port: 443
+    certfile:
+    keyfile:
+    letsencrypt:
+      enable: false
+      accepttos: true
+      email: "stefanwellhoner@gmail.com"
+      cache: "/data/certs"
+      hosts:
+        - "test.com"
+        - "test.co.za"
+      renewbefore: 30
+
+database:
+  host: "localhost"
+  port: 5432
+  user: "test_user"
+  password: "test_password"
+  database: "test_db"
+  sslmode: "disable"
+
+passstrength: 10
