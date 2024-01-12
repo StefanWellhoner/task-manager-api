@@ -1,0 +1,31 @@
+server:
+  keepaliveperiodsecond: 0
+  listenaddr: ""
+  port: 80
+
+  ssl:
+    enable: false
+    redirecttohttps: true
+    listenaddr: ""
+    port: 443
+    certfile:
+    keyfile:
+    letsencrypt:
+      enable: false
+      accepttos: true
+      email: "stefanwellhoner@gmail.com"
+      cache: "/data/certs"
+      hosts:
+        - "wellhoner.com"
+        - "wellhoner.co.za"
+      renewbefore: 30
+
+database:
+  host: "localhost"
+  port: 3306
+  user: "wellhoner"
+  password: "sosekjQtZmHhY"
+  database: "wellhoner"
+  sslmode: "disable"
+
+passstrength: 10

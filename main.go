@@ -7,7 +7,6 @@ import (
 	"github.com/StefanWellhoner/task-manager-api/internal/config"
 	"github.com/StefanWellhoner/task-manager-api/internal/mode"
 	model "github.com/StefanWellhoner/task-manager-api/internal/models"
-	"github.com/StefanWellhoner/task-manager-api/internal/services"
 )
 
 var (
@@ -31,12 +30,9 @@ func main() {
 	fmt.Println("Starting Task Manager API version", vInfo.Version, "in", mode.GetEnv(), "mode.")
 	conf := config.Get()
 
-	db, err := services.New(conf.Database.Database)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
+	fmt.Println("Config is set in mode", mode.GetEnv())
+	fmt.Println("Listening on", conf.Server.ListenAddr, "port", conf.Server.Port)
 
-	router := app.SetupRouter(db)
-	router.Run()
+	router := app.SetupRouter()
+	router.Run(fmt.Sprintf("%s:%d", conf.Server.ListenAddr, conf.Server.Port))
 }
