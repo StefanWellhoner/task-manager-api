@@ -14,9 +14,9 @@ test:
 	$(GO) test -v ./...
 
 coverage:
-	$(GO) test --race -coverprofile=coverage.txt -covermode=atomic ./...
+	$(GO) test --race -coverprofile=coverage.out -covermode=atomic ./...
 
 clean:
-	rm -f $(APP_NAME) coverage.txt
+	rm -f $(APP_NAME) coverage.out
 
 .PHONY: build run test clean coverage
