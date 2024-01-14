@@ -1,14 +1,35 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/StefanWellhoner/task-manager-api/internal/mode"
 	"github.com/stretchr/testify/assert"
 )
 
+// TestGet is a unit test function that tests the Get function in the config package.
+// It verifies the correctness of the configuration values returned by the Get function.
 func TestGet(t *testing.T) {
+	// Store the current directory
+	originalDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get current directory: %v", err)
+	}
+
+	// Determine the project root directory
+	_, filename, _, _ := runtime.Caller(0)
+	dir := filepath.Join(filepath.Dir(filename), "../../")
+
 	mode.SetEnv(mode.Test)
+
+	// Change to project root directory
+	err = os.Chdir(dir)
+	if err != nil {
+		t.Fatalf("Failed to change directory: %v", err)
+	}
 
 	conf := Get()
 	// Test Server Settings
@@ -37,4 +58,30 @@ func TestGet(t *testing.T) {
 	assert.Equal(t, "test_password", conf.Database.Password, "Database Password should be postgres")
 	assert.Equal(t, "test_db", conf.Database.Database, "Database Database should be postgres")
 	assert.Equal(t, "disable", conf.Database.SSLMode, "Database SSLMode should be disable")
+
+	// Change back to the original directory
+	err = os.Chdir(originalDir)
+	if err != nil {
+		t.Fatalf("Failed to change back to original directory: %v", err)
+	}
+}
+
+// TestConfigFiles tests the behavior of the configFiles function.
+// It verifies that the correct configuration file is returned based on the provided mode.
+func TestConfigFiles(t *testing.T) {
+	testCases := []struct {
+		mode        string
+		expectedCfg string
+	}{
+		{mode.Prod, "config.yml"},
+		{mode.Dev, "config.dev.yml"},
+		{mode.Test, "config.test.yml"},
+		{"unknown", "config.dev.yml"},
+	}
+
+	for _, tc := range testCases {
+		mode.SetEnv(tc.mode)
+		cfgFile := configFiles()
+		assert.Equal(t, tc.expectedCfg, cfgFile, "Config file should be %s", tc.expectedCfg)
+	}
 }
