@@ -1,9 +1,0 @@
-mode: atomic
-github.com/StefanWellhoner/task-manager-api/internal/config/config.go:39.27,40.23 1 5
-github.com/StefanWellhoner/task-manager-api/internal/config/config.go:41.17,42.22 1 1
-github.com/StefanWellhoner/task-manager-api/internal/config/config.go:43.16,44.26 1 1
-github.com/StefanWellhoner/task-manager-api/internal/config/config.go:45.17,46.27 1 2
-github.com/StefanWellhoner/task-manager-api/internal/config/config.go:47.10,48.26 1 1
-github.com/StefanWellhoner/task-manager-api/internal/config/config.go:52.27,55.16 3 1
-github.com/StefanWellhoner/task-manager-api/internal/config/config.go:55.16,56.13 1 0
-github.com/StefanWellhoner/task-manager-api/internal/config/config.go:58.2,58.13 1 1

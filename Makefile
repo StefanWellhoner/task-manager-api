@@ -1,22 +1,28 @@
 # The name of your application
 APP_NAME = task-forge
 
-# The go compiler to use
-GO = go
+# variables
+SCRIPTS_DIR = ./scripts
 
 build:
-	$(GO) build -o $(APP_NAME) main.go
+	@echo "Building $(APP_NAME)..."
+	@${SCRIPTS_DIR}/build.sh $(APP_NAME)
+	@echo "Done"
 
-run: build
-	@./$(APP_NAME)
+run: 
+	@echo "Running $(APP_NAME)..."
+	@${SCRIPTS_DIR}/run.sh
 
 test:
-	$(GO) test -v ./...
+	@echo "Running tests..."
+	@${SCRIPTS_DIR}/test.sh
 
 coverage:
-	$(GO) test --race -coverprofile=coverage.out -covermode=atomic ./...
+	@echo "Running coverage..."
+	@${SCRIPTS_DIR}/coverage.sh
 
 clean:
-	rm -f $(APP_NAME) coverage.out
+	@echo "Cleaning $(APP_NAME)..."
+	@${SCRIPTS_DIR}/clean.sh $(APP_NAME)
 
 .PHONY: build run test clean coverage
