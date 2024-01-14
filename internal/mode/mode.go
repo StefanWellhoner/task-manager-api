@@ -54,6 +54,6 @@ func updateGinEnv() {
 	case Test:
 		gin.SetMode(gin.TestMode)
 	default:
-		panic("invalid mode")
+		gin.SetMode(gin.DebugMode)
 	}
 }
