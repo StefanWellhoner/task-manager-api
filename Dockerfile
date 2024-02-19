@@ -1,6 +1,9 @@
 # Stage 1: Build the Go binary
 FROM golang:latest AS builder
 
+RUN apt-get update && apt-get install -y \
+    && rm -rf /var/lib/apt/lists/*
+
 LABEL maintainer="StefanWellhoner <stefanwellhoner@ymail.com>"
 
 WORKDIR /app
@@ -11,10 +14,10 @@ RUN go mod download
 
 COPY . .
 
-RUN make build
+RUN go build -o task-forge main.go
 
 # Stage 2: Create a minimal image to run the Go binary
-FROM alpine:latest
+FROM amd64/debian:stable-slim
 
 WORKDIR /app
 
