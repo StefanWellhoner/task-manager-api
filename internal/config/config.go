@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"github.com/StefanWellhoner/task-manager-api/internal/mode"
 	"github.com/jinzhu/configor"
 )
@@ -45,7 +47,7 @@ func configFiles() string {
 	case mode.Test:
 		return "config.test.yml"
 	default:
-		return "config.dev.yml"
+		panic("Unknown environment")
 	}
 }
 
@@ -55,5 +57,6 @@ func Get() *Configuration {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Printf("Config loaded from %s\n", configFiles())
 	return conf
 }

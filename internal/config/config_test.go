@@ -72,16 +72,21 @@ func TestConfigFiles(t *testing.T) {
 	testCases := []struct {
 		mode        string
 		expectedCfg string
+		shouldPanic bool
 	}{
-		{mode.Prod, "config.yml"},
-		{mode.Dev, "config.dev.yml"},
-		{mode.Test, "config.test.yml"},
-		{"unknown", "config.dev.yml"},
+		{mode.Prod, "config.yml", false},
+		{mode.Dev, "config.dev.yml", false},
+		{mode.Test, "config.test.yml", false},
+		{"unknown", "", true},
 	}
 
 	for _, tc := range testCases {
-		mode.SetEnv(tc.mode)
-		cfgFile := configFiles()
-		assert.Equal(t, tc.expectedCfg, cfgFile, "Config file should be %s", tc.expectedCfg)
+		if tc.shouldPanic {
+			assert.Panics(t, func() { mode.SetEnv(tc.mode); configFiles() }, "SetEnv should panic for mode: "+tc.mode)
+		} else {
+			mode.SetEnv(tc.mode)
+			cfgFile := configFiles()
+			assert.Equal(t, tc.expectedCfg, cfgFile, "Config file should be %s for mode %s", tc.expectedCfg, tc.mode)
+		}
 	}
 }
