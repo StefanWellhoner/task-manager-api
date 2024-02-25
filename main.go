@@ -5,6 +5,7 @@ import (
 
 	"github.com/StefanWellhoner/task-manager-api/internal/app"
 	"github.com/StefanWellhoner/task-manager-api/internal/config"
+	logger "github.com/StefanWellhoner/task-manager-api/internal/middleware"
 	"github.com/StefanWellhoner/task-manager-api/internal/mode"
 	model "github.com/StefanWellhoner/task-manager-api/internal/models"
 )
@@ -34,5 +35,6 @@ func main() {
 	fmt.Println("Listening on", conf.Server.ListenAddr, "port", conf.Server.Port)
 
 	router := app.SetupRouter()
+	router.Use(logger.Logger())
 	router.Run(fmt.Sprintf("%s:%d", conf.Server.ListenAddr, conf.Server.Port))
 }

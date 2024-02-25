@@ -28,12 +28,14 @@ type Configuration struct {
 		}
 	}
 	Database struct {
-		Host     string `default:"localhost"`
-		Port     int    `default:"5432"`
-		User     string `default:"postgres"`
-		Password string `default:"postgres"`
-		Database string `default:"postgres"`
-		SSLMode  string `default:"disable"`
+		Host          string `default:"localhost"`
+		Port          int    `default:"5432"`
+		User          string `default:"postgres"`
+		Password      string `default:"postgres"`
+		Database      string `default:"postgres"`
+		SSLMode       string `default:"disable"`
+		MaxRetries    int    `default:"10"`
+		RetryInterval int    `default:"10"`
 	}
 	PassStrength int `default:"10"`
 }

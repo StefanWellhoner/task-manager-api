@@ -1,5 +1,5 @@
 # The name of your application
-APP_NAME = task-forge
+APP_NAME = taskforge
 
 # variables
 SCRIPTS_DIR = ./scripts

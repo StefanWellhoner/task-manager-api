@@ -1,39 +1,52 @@
-package logger
+package middleware
 
 import (
+	"bytes"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func TestLogger(t *testing.T) {
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, World!"))
+	// Setup Gin with Logger middleware
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(Logger())
+
+	// Dummy handler to simulate a request
+	r.GET("/test", func(c *gin.Context) {
+		time.Sleep(10 * time.Millisecond) // Simulate some processing time
+		c.String(http.StatusOK, "test response")
 	})
 
-	// Create a new request with a dummy URL
-	req, err := http.NewRequest("GET", "/dummy", nil)
-	if err != nil {
-		t.Fatal(err)
+	// Capture the log output
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	defer func() {
+		log.SetOutput(nil) // Reset the output to default
+	}()
+
+	// Create a test request
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/test", nil)
+
+	// Perform the request
+	r.ServeHTTP(w, req)
+
+	// Test the response
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status code %d, got %d", http.StatusOK, w.Code)
 	}
 
-	// Create a new response recorder
-	rr := httptest.NewRecorder()
-
-	// Create a new logger middleware
-	loggerMiddleware := Logger(handler)
-
-	// Serve the request through the logger middleware
-	loggerMiddleware.ServeHTTP(rr, req)
-
-	// Assert the expected status code
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	// Check if the log contains expected information
+	logOutput := buf.String()
+	if !bytes.Contains([]byte(logOutput), []byte("GET")) || !bytes.Contains([]byte(logOutput), []byte("/test")) {
+		t.Errorf("Log output does not contain expected method or path")
 	}
 
-	// Assert the expected response body
-	expected := "Hello, World!"
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-	}
+	// Here you could add more checks, for instance, to verify the IP and the duration format
 }
