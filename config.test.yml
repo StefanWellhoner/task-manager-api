@@ -27,5 +27,7 @@ database:
   password: "test_password"
   database: "test_db"
   sslmode: "disable"
+  maxRetries: 10
+  retryInterval: 10
 
 passstrength: 10

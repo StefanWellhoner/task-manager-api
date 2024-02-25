@@ -3,6 +3,7 @@ package model
 import (
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -12,51 +13,31 @@ import (
 //
 // swagger:model User
 type User struct {
-	// The user ID
-	//
-	// required: true
-	// example: 1
-	gorm.Model
-	// The user username
-	//
-	// required: true
-	// example: johndoe
-	Username string `gorm:"type:varchar(180);unique_index"`
-	// The user password
-	//
-	// required: true
-	// example: $2a
-	Password string `gorm:"type:varchar(180)"`
-	// The user email
-	//
-	// required: true
-	// example: johndoe@example.com
-	Email string `gorm:"type:varchar(180);unique_index"`
-	// The user first name
-	//
-	// required: true
-	// example: John
-	FirstName string `gorm:"type:varchar(180)"`
-	// The user last name
-	//
-	// required: true
-	// example: Doe
-	LastName string `gorm:"type:varchar(180)"`
-	// The user is active
-	//
-	// required: true
-	// example: true
-	IsActive bool `gorm:"type:boolean;default:true"`
-	// The user's last login date/time
-	//
-	// required: true
-	// example: 2020-01-01T00:00:00Z
-	LastLogin time.Time
-	// A slice of tasks associated with this user
-	//
-	// required: true
-	// example: ["1","2","3"]
-	Tasks []Task `gorm:"foreignKey:UserID"`
+	Base
+	Email               string `gorm:"uniqueIndex"`
+	PasswordHash        string
+	PasswordLastChanged time.Time
+	Verified            bool `gorm:"default:false"`
+	FirstName           string
+	LastName            string
+	ProfileImage        string
+	LastLogin           time.Time
+	Tasks               []Task               `gorm:"foreignKey:UserID"`
+	OwnedWorkspaces     []Workspace          `gorm:"foreignKey:OwnerUserID"`
+	WorkspaceRoles      []WorkspaceRole      `gorm:"many2many:workspace_roles;"`
+	RefreshTokens       []RefreshToken       `gorm:"foreignKey:UserID"`
+	PasswordResetTokens []PasswordResetToken `gorm:"foreignKey:UserID"`
+}
+
+func (u *User) BeforeCreate(*gorm.DB) (err error) {
+	if len(u.PasswordHash) > 0 {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.PasswordHash), bcrypt.DefaultCost)
+		if err != nil {
+			return err
+		}
+		u.PasswordHash = string(hashedPassword)
+	}
+	return
 }
 
 // TableName sets the table name for the user model.

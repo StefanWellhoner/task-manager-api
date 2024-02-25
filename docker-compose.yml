@@ -10,13 +10,14 @@ services:
       - db
     networks:
       - app-network
+    command: ["./wait-for-it.sh", "db:5432", "--", "./taskforge"]
 
   db:
     image: postgres:latest
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: wellhoner
+      POSTGRES_USER: taskforge_user
       POSTGRES_PASSWORD: vUFl8tw2s9i8kIyw
       POSTGRES_DB: taskforge
     volumes:
@@ -26,7 +27,6 @@ services:
 
 networks:
   app-network:
-    driver: bridge
 
 volumes:
   postgres-data:

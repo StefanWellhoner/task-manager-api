@@ -22,10 +22,12 @@ server:
 
 database:
   host: "localhost"
-  port: 3306
-  user: "wellhoner"
+  port: 5432
+  user: "taskforge_user"
   password: vUFl8tw2s9i8kIyw
-  database: "task-forge"
+  database: "taskforge"
   sslmode: "disable"
+  maxRetries: 10
+  retryInterval: 10
 
 passstrength: 10
