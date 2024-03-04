@@ -49,7 +49,9 @@ func Login(db *services.GormDatabase) gin.HandlerFunc {
 		}
 
 		userRepo := repositories.NewUserRepository(db.DB)
-		userService := services.NewUserService(userRepo)
+		tokenRepo := repositories.NewTokenRepository(db.DB)
+		tokenService := services.NewTokenService(tokenRepo)
+		userService := services.NewUserService(userRepo, tokenService)
 
 		tokenDetails, err := userService.Login(payload.Email, payload.Password)
 		if err != nil {
@@ -110,7 +112,9 @@ func Register(db *services.GormDatabase) gin.HandlerFunc {
 		}
 
 		userRepo := repositories.NewUserRepository(db.DB)
-		userService := services.NewUserService(userRepo)
+		tokenRepo := repositories.NewTokenRepository(db.DB)
+		tokenService := services.NewTokenService(tokenRepo)
+		userService := services.NewUserService(userRepo, tokenService)
 
 		user := model.User{Email: payload.Email, PasswordHash: payload.Password, FirstName: payload.Firstname, LastName: payload.Lastname}
 

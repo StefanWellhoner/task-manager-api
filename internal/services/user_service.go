@@ -14,6 +14,7 @@ type UserService interface {
 
 type userService struct {
 	userRepository repositories.UserRepository
+	tokenService   TokenService
 }
 
 type TokenDetails struct {
@@ -21,8 +22,8 @@ type TokenDetails struct {
 	RefreshToken string
 }
 
-func NewUserService(userRepo repositories.UserRepository) UserService {
-	return &userService{userRepository: userRepo}
+func NewUserService(userRepo repositories.UserRepository, tokenService TokenService) UserService {
+	return &userService{userRepository: userRepo, tokenService: tokenService}
 }
 
 func (s *userService) Register(user *model.User) error {
@@ -44,14 +45,10 @@ func (s *userService) Login(email, password string) (*TokenDetails, error) {
 		return nil, errors.New("invalid login information")
 	}
 
-	tokenDetails, err := generateTokens(user)
+	tokenDetails, err := s.tokenService.GenerateTokens(user)
 	if err != nil {
 		return nil, err
 	}
 
 	return tokenDetails, nil
-}
-
-func generateTokens(user *model.User) (*TokenDetails, error) {
-	return nil, nil
 }
