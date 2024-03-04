@@ -59,6 +59,10 @@ type User struct {
 	Tasks []Task `gorm:"foreignKey:UserID"`
 }
 
+func (u *User) VerifyPassword(password string) (err error) {
+	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
+}
+
 // TableName sets the table name for the user model.
 func (User) TableName() string {
 	return "users"

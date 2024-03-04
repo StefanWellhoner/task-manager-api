@@ -35,6 +35,10 @@ type Configuration struct {
 		Database string `default:"postgres"`
 		SSLMode  string `default:"disable"`
 	}
+	Secrets struct {
+		Jwt string `default:"secret"`
+	}
+
 	PassStrength int `default:"10"`
 }
 

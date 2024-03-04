@@ -28,4 +28,7 @@ database:
   database: "task-forge"
   sslmode: "disable"
 
+secrets:
+  jwt: k+bQu6EgGx30l/VNhRfYwgkWxo5Ce4x8H2/YvoHDHxYJoUzB2gKK3h8oYIP7oW3soWzxYme2Dt2xXyTn0iDvvA==
+
 passstrength: 10

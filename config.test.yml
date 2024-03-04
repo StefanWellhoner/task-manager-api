@@ -28,4 +28,7 @@ database:
   database: "test_db"
   sslmode: "disable"
 
+secrets:
+  jwt: 5uQiCkNv3bKKfhIvjANiFWaEQC/yG5+o5Op9gP4NvwA3R1vEP+Ww4LEgRbX0aGTTPBDSMxNLC4I+o93olzQhiw==
+
 passstrength: 10
