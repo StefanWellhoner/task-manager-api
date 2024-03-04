@@ -2,11 +2,15 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/StefanWellhoner/task-manager-api/internal/config"
 	model "github.com/StefanWellhoner/task-manager-api/internal/models"
+	repositories "github.com/StefanWellhoner/task-manager-api/internal/repository"
 	"github.com/StefanWellhoner/task-manager-api/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt"
 )
 
 type RegisterRequest struct {
@@ -21,13 +25,76 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-func Login(c *gin.Context) {
+var (
+	SigningKey         = []byte(config.Get().Secrets.Jwt)
+	AccessTokenExpiry  = 15 * time.Minute
+	RefreshTokenExpiry = 7 * 24 * time.Hour
+)
+
+type Claims struct {
+	jwt.StandardClaims
+	UserID string `json:"user_id"`
 }
 
-func Refresh(c *gin.Context) {
+func Login(db *services.GormDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var payload LoginRequest
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			errors := make(map[string]string)
+			for _, fieldError := range err.(validator.ValidationErrors) {
+				errors[fieldError.Field()] = fieldError.ActualTag()
+			}
+			HandleResponse(c, http.StatusBadRequest, "Invalid login information", errors)
+			return
+		}
+
+		userRepo := repositories.NewUserRepository(db.DB)
+		userService := services.NewUserService(userRepo)
+
+		tokenDetails, err := userService.Login(payload.Email, payload.Password)
+		if err != nil {
+			HandleResponse(c, http.StatusUnauthorized, "Invalid login information", nil)
+			return
+		}
+
+		HandleResponse(c, http.StatusOK, "Login successful", gin.H{"access_token": tokenDetails.AccessToken, "refresh_token": tokenDetails.RefreshToken})
+	}
 }
 
-func Logout(c *gin.Context) {
+func Refresh(db *services.GormDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+	}
+}
+
+func Logout(db *services.GormDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		HandleResponse(c, http.StatusOK, "Logout successful", nil)
+	}
+}
+
+func ChangePassword(db *services.GormDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+	}
+}
+
+func ResetPassword(db *services.GormDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+	}
+}
+
+func ResetPasswordConfirm(db *services.GormDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+	}
+}
+
+func VerifyEmail(db *services.GormDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+	}
+}
+
+func GetUserFromToken(db *services.GormDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+	}
 }
 
 func Register(db *services.GormDatabase) gin.HandlerFunc {
@@ -38,29 +105,24 @@ func Register(db *services.GormDatabase) gin.HandlerFunc {
 			for _, fieldError := range err.(validator.ValidationErrors) {
 				errors[fieldError.Field()] = fieldError.ActualTag()
 			}
-			HandleError(c, http.StatusBadRequest, "Invalid regisration information", errors)
+			HandleResponse(c, http.StatusBadRequest, "Invalid registration information", errors)
 			return
 		}
 
-		if isRegistered(payload.Email, db) {
-			HandleError(c, http.StatusBadRequest, "User already registered", nil)
-			return
-		}
+		userRepo := repositories.NewUserRepository(db.DB)
+		userService := services.NewUserService(userRepo)
 
 		user := model.User{Email: payload.Email, PasswordHash: payload.Password, FirstName: payload.Firstname, LastName: payload.Lastname}
 
-		result := db.DB.Create(&user)
-		if result.Error != nil {
-			HandleError(c, http.StatusInternalServerError, "Failed to register user", nil)
+		if err := userService.Register(&user); err != nil {
+			if err.Error() == "user already exists" {
+				HandleResponse(c, http.StatusConflict, "User is already registered", nil)
+			} else {
+				HandleResponse(c, http.StatusInternalServerError, "Failed to register user", nil)
+			}
 			return
 		}
 
-		c.JSON(http.StatusCreated, gin.H{"id": user.ID, "email": user.Email, "firstname": user.FirstName, "lastname": user.LastName})
+		HandleResponse(c, http.StatusCreated, "User registered successfully", gin.H{"id": user.ID, "email": user.Email, "firstname": user.FirstName, "lastname": user.LastName})
 	}
-}
-
-func isRegistered(email string, db *services.GormDatabase) bool {
-	var user model.User
-	db.DB.Where("email = ?", email).First(&user)
-	return user.ID != [16]byte{}
 }
