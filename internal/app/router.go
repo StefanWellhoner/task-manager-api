@@ -25,13 +25,22 @@ func registerRoutes(router *gin.Engine) {
 
 	authGroup := router.Group("/auth")
 	{
-		authGroup.GET("/refresh", handlers.Refresh)
-		authGroup.POST("/login", handlers.Login)
-		authGroup.POST("/logout", handlers.Logout)
 		authGroup.POST("/register", handlers.Register(db))
+		authGroup.POST("/login", handlers.Login(db))
+		authGroup.GET("/refresh", handlers.Refresh(db))
+
+		authGroup.Use(middleware.Auth())
+		{
+			authGroup.POST("/logout", handlers.Logout(db))
+			authGroup.POST("/password/change", handlers.ChangePassword(db))
+			authGroup.POST("/password/reset", handlers.ResetPassword(db))
+			authGroup.POST("/password/reset/confirm", handlers.ResetPasswordConfirm(db))
+			authGroup.POST("/verify/email", handlers.VerifyEmail(db))
+			authGroup.GET("/user", handlers.GetUserFromToken(db))
+		}
 	}
 
-	userGroup := router.Group("/users")
+	userGroup := router.Group("/users").Use(middleware.Auth())
 	{
 		userGroup.GET("/", handlers.GetUsers)
 		userGroup.GET("/:id", handlers.GetUser)
@@ -39,7 +48,7 @@ func registerRoutes(router *gin.Engine) {
 		userGroup.DELETE("/:id", handlers.DeleteUser)
 	}
 
-	taskGroup := router.Group("/tasks")
+	taskGroup := router.Group("/tasks").Use(middleware.Auth())
 	{
 		taskGroup.GET("/", handlers.GetTasks)
 		taskGroup.POST("/", handlers.CreateTask)
@@ -58,7 +67,7 @@ func registerRoutes(router *gin.Engine) {
 		taskGroup.GET("/search", handlers.SearchTasks)
 	}
 
-	categoryGroup := router.Group("/categories")
+	categoryGroup := router.Group("/categories").Use(middleware.Auth())
 	{
 		categoryGroup.GET("/", handlers.GetCategories)
 		categoryGroup.POST("/", handlers.CreateCategory)

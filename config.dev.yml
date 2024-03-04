@@ -30,4 +30,7 @@ database:
   maxRetries: 10
   retryInterval: 10
 
+secrets:
+  jwt: k+bQu6EgGx30l/VNhRfYwgkWxo5Ce4x8H2/YvoHDHxYJoUzB2gKK3h8oYIP7oW3soWzxYme2Dt2xXyTn0iDvvA==
+
 passstrength: 10

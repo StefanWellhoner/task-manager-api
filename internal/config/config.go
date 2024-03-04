@@ -37,6 +37,10 @@ type Configuration struct {
 		MaxRetries    int    `default:"10"`
 		RetryInterval int    `default:"10"`
 	}
+	Secrets struct {
+		Jwt string `default:"secret"`
+	}
+
 	PassStrength int `default:"10"`
 }
 
