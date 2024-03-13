@@ -8,8 +8,8 @@ import (
 )
 
 type UserService interface {
-	Register(user *model.User) error
-	Login(email string, password string) (*TokenDetails, error)
+	Create(user *model.User) error
+	Authenticate(email string, password string) (*TokenDetails, error)
 }
 
 type userService struct {
@@ -17,16 +17,11 @@ type userService struct {
 	tokenService   TokenService
 }
 
-type TokenDetails struct {
-	AccessToken  string
-	RefreshToken string
-}
-
 func NewUserService(userRepo repositories.UserRepository, tokenService TokenService) UserService {
 	return &userService{userRepository: userRepo, tokenService: tokenService}
 }
 
-func (s *userService) Register(user *model.User) error {
+func (s *userService) Create(user *model.User) error {
 	existingUser, _ := s.userRepository.FindByEmail(user.Email)
 	if existingUser != nil {
 		return errors.New("user already exists")
@@ -35,7 +30,7 @@ func (s *userService) Register(user *model.User) error {
 	return s.userRepository.Create(user)
 }
 
-func (s *userService) Login(email, password string) (*TokenDetails, error) {
+func (s *userService) Authenticate(email, password string) (*TokenDetails, error) {
 	user, err := s.userRepository.FindByEmail(email)
 	if err != nil {
 		return nil, err

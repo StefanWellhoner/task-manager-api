@@ -33,6 +33,15 @@ func (r *GormTokenRepository) FindByToken(token string) (*model.RefreshToken, er
 	return &refreshToken, nil
 }
 
+func (r *GormTokenRepository) FindByUserID(userID string) (*model.RefreshToken, error) {
+	var refreshToken model.RefreshToken
+	result := r.DB.Where("user_id = ?", userID).First(&refreshToken)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &refreshToken, nil
+}
+
 func (r *GormTokenRepository) Delete(token string) error {
 	result := r.DB.Where("token = ?", token).Delete(&model.RefreshToken{})
 	return result.Error
