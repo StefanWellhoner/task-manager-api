@@ -79,6 +79,12 @@ func Auth() gin.HandlerFunc {
 			return
 		}
 
+		if claims["token_type"] != "access" {
+			handlers.HandleResponse(c, 401, "Unauthorized", "invalid token type")
+			c.Abort()
+			return
+		}
+
 		c.Set("userID", claims["user_id"])
 		c.Next()
 	}
