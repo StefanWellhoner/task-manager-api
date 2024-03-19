@@ -106,7 +106,7 @@ func (s *tokenService) ValidateToken(token string) (*model.RefreshToken, error) 
 }
 
 func (s *tokenService) DeleteRefreshToken(token string) error {
-	if err := s.tokenRepository.Delete(token); err != nil {
+	if err := s.tokenRepository.DeleteByToken(token); err != nil {
 		return err
 	}
 	return nil

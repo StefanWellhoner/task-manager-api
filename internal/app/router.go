@@ -14,6 +14,7 @@ import (
 func setupMiddleware(router *gin.Engine) {
 	router.Use(middleware.RequestID())
 	router.Use(middleware.Logger())
+	router.Use(middleware.SecurityHeadersMiddleware())
 }
 
 func registerRoutes(router *gin.Engine) {
@@ -43,7 +44,7 @@ func registerRoutes(router *gin.Engine) {
 	userGroup := router.Group("/users").Use(middleware.Auth())
 	{
 		userGroup.GET("/", handlers.GetUsers)
-		userGroup.GET("/:id", handlers.GetUser)
+		userGroup.GET("/:id", handlers.GetUser(db))
 		userGroup.PUT("/:id", handlers.UpdateUser)
 		userGroup.DELETE("/:id", handlers.DeleteUser)
 	}

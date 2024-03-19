@@ -6,8 +6,9 @@ import (
 )
 
 type UserRepository interface {
-	FindByEmail(email string) (*model.User, error)
 	Create(user *model.User) error
+	FindByEmail(email string) (*model.User, error)
+	FindByID(id string) (*model.User, error)
 }
 
 type GormUserRepository struct {
@@ -16,6 +17,11 @@ type GormUserRepository struct {
 
 func NewUserRepository(db *gorm.DB) UserRepository {
 	return &GormUserRepository{DB: db}
+}
+
+func (r *GormUserRepository) Create(user *model.User) error {
+	result := r.DB.Create(user)
+	return result.Error
 }
 
 func (r *GormUserRepository) FindByEmail(email string) (*model.User, error) {
@@ -34,9 +40,4 @@ func (r *GormUserRepository) FindByID(id string) (*model.User, error) {
 		return nil, result.Error
 	}
 	return &user, nil
-}
-
-func (r *GormUserRepository) Create(user *model.User) error {
-	result := r.DB.Create(user)
-	return result.Error
 }

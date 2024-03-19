@@ -14,19 +14,28 @@ import (
 // swagger:model User
 type User struct {
 	Base
-	Email               string `gorm:"uniqueIndex"`
-	PasswordHash        string
-	PasswordLastChanged time.Time
-	Verified            bool `gorm:"default:false"`
-	FirstName           string
-	LastName            string
-	ProfileImage        string
-	LastLogin           time.Time
-	Tasks               []Task               `gorm:"foreignKey:UserID"`
-	OwnedWorkspaces     []Workspace          `gorm:"foreignKey:OwnerUserID"`
-	WorkspaceRoles      []WorkspaceRole      `gorm:"many2many:workspace_roles;"`
-	RefreshTokens       []RefreshToken       `gorm:"foreignKey:UserID"`
-	PasswordResetTokens []PasswordResetToken `gorm:"foreignKey:UserID"`
+	Email               string               `gorm:"uniqueIndex" json:"email"`
+	PasswordHash        string               `json:"password"`
+	PasswordLastChanged time.Time            `json:"passwordLastChanged"`
+	Verified            bool                 `gorm:"default:false" json:"verified"`
+	FirstName           string               `json:"firstName"`
+	LastName            string               `json:"lastName"`
+	ProfileImage        string               `json:"profileImage"`
+	LastLogin           time.Time            `json:"lastLogin"`
+	Tasks               []Task               `gorm:"foreignKey:UserID" json:"tasks"`
+	OwnedWorkspaces     []Workspace          `gorm:"foreignKey:OwnerUserID" json:"ownedWorkspaces"`
+	WorkspaceRoles      []WorkspaceRole      `gorm:"many2many:workspace_roles;" json:"workspaceRoles"`
+	RefreshTokens       []RefreshToken       `gorm:"foreignKey:UserID" json:"refreshTokens"`
+	PasswordResetTokens []PasswordResetToken `gorm:"foreignKey:UserID" json:"passwordResetTokens"`
+}
+
+type SanitizeUser struct {
+	Base
+	Email        string    `json:"email"`
+	FirstName    string    `json:"firstName"`
+	LastName     string    `json:"lastName"`
+	ProfileImage string    `json:"profileImage"`
+	LastLogin    time.Time `json:"lastLogin"`
 }
 
 func (u *User) BeforeCreate(*gorm.DB) (err error) {
@@ -42,6 +51,17 @@ func (u *User) BeforeCreate(*gorm.DB) (err error) {
 
 func (u *User) VerifyPassword(password string) (err error) {
 	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
+}
+
+func (u *User) SanitizeUser() *SanitizeUser {
+	return &SanitizeUser{
+		Base:         u.Base,
+		Email:        u.Email,
+		FirstName:    u.FirstName,
+		LastName:     u.LastName,
+		ProfileImage: u.ProfileImage,
+		LastLogin:    u.LastLogin,
+	}
 }
 
 // TableName sets the table name for the user model.

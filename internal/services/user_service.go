@@ -10,6 +10,7 @@ import (
 type UserService interface {
 	Create(user *model.User) error
 	Authenticate(email string, password string) (*TokenDetails, error)
+	GetUserByID(id string) (*model.User, error)
 }
 
 type userService struct {
@@ -46,4 +47,12 @@ func (s *userService) Authenticate(email, password string) (*TokenDetails, error
 	}
 
 	return tokenDetails, nil
+}
+
+func (s *userService) GetUserByID(id string) (*model.User, error) {
+	user, err := s.userRepository.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

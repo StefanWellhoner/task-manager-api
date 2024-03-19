@@ -8,7 +8,9 @@ import (
 type TokenRepository interface {
 	Create(token *model.RefreshToken) error
 	FindByToken(token string) (*model.RefreshToken, error)
-	Delete(token string) error
+	FindByUserID(userID string) (*model.RefreshToken, error)
+	DeleteByToken(token string) error
+	DeleteByUserID(userID string) error
 }
 
 type GormTokenRepository struct {
@@ -42,7 +44,12 @@ func (r *GormTokenRepository) FindByUserID(userID string) (*model.RefreshToken, 
 	return &refreshToken, nil
 }
 
-func (r *GormTokenRepository) Delete(token string) error {
+func (r *GormTokenRepository) DeleteByToken(token string) error {
 	result := r.DB.Where("token = ?", token).Delete(&model.RefreshToken{})
+	return result.Error
+}
+
+func (r *GormTokenRepository) DeleteByUserID(userID string) error {
+	result := r.DB.Where("user_id = ?", userID).Delete(&model.RefreshToken{})
 	return result.Error
 }
