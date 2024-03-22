@@ -19,9 +19,6 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		// Referrer-Policy
 		c.Writer.Header().Set("Referrer-Policy", "no-referrer-when-downgrade")
 
-		// Feature-Policy (Consider using Permissions-Policy depending on the most recent browser support)
-		c.Writer.Header().Set("Feature-Policy", "geolocation 'none'; microphone 'none'; camera 'none'")
-
 		c.Next()
 	}
 }

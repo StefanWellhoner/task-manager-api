@@ -37,7 +37,7 @@ func registerRoutes(router *gin.Engine) {
 			authGroup.POST("/password/reset", handlers.ResetPassword(db))
 			authGroup.POST("/password/reset/confirm", handlers.ResetPasswordConfirm(db))
 			authGroup.POST("/verify/email", handlers.VerifyEmail(db))
-			authGroup.GET("/user", handlers.GetUserFromToken(db))
+			authGroup.GET("/me", handlers.GetUserFromToken(db))
 		}
 	}
 

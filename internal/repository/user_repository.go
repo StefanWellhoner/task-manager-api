@@ -9,6 +9,7 @@ type UserRepository interface {
 	Create(user *model.User) error
 	FindByEmail(email string) (*model.User, error)
 	FindByID(id string) (*model.User, error)
+	Update(user *model.User) error
 }
 
 type GormUserRepository struct {
@@ -40,4 +41,9 @@ func (r *GormUserRepository) FindByID(id string) (*model.User, error) {
 		return nil, result.Error
 	}
 	return &user, nil
+}
+
+func (r *GormUserRepository) Update(user *model.User) error {
+	result := r.DB.Save(user)
+	return result.Error
 }

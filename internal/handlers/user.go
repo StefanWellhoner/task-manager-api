@@ -15,11 +15,11 @@ func GetUser(db *services.GormDatabase) gin.HandlerFunc {
 
 		user, err := userService.GetUserByID(c.Param("id"))
 		if err != nil {
-			c.JSON(500, gin.H{"error": "Internal server error"})
+			HandleError(c, err)
 			return
 		}
 
-		c.JSON(200, user.SanitizeUser())
+		c.JSON(200, user.PublicProfile())
 	}
 }
 

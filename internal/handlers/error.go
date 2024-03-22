@@ -1,13 +1,30 @@
 package handlers
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
 
-type ErrorResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	Details any    `json:"details,omitempty"`
-}
+	"github.com/StefanWellhoner/task-manager-api/internal/errors"
+	"github.com/gin-gonic/gin"
+)
 
-func HandleError(c *gin.Context, statusCode int, message string, details any) {
-	c.JSON(statusCode, ErrorResponse{Code: statusCode, Message: message, Details: details})
+func HandleError(c *gin.Context, err error) {
+	if serviceError, ok := err.(*errors.ServiceError); ok {
+		status := serviceError.Status
+		if status == 0 {
+			status = http.StatusInternalServerError
+		}
+
+		c.JSON(status, gin.H{
+			"type":    serviceError.Type,
+			"message": serviceError.Message,
+			"status":  status,
+		})
+		return
+	}
+
+	c.JSON(http.StatusInternalServerError, gin.H{
+		"type":    errors.InternalError,
+		"message": "An internal error occurred",
+		"status":  http.StatusInternalServerError,
+	})
 }

@@ -1,10 +1,11 @@
 package model
 
 import (
+	"errors"
 	"time"
+	"unicode"
 
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 // User Model
@@ -29,39 +30,74 @@ type User struct {
 	PasswordResetTokens []PasswordResetToken `gorm:"foreignKey:UserID" json:"passwordResetTokens"`
 }
 
-type SanitizeUser struct {
-	Base
-	Email        string    `json:"email"`
-	FirstName    string    `json:"firstName"`
-	LastName     string    `json:"lastName"`
-	ProfileImage string    `json:"profileImage"`
-	LastLogin    time.Time `json:"lastLogin"`
+type UserPublicProfile struct {
+	FirstName    string `json:"firstName"`
+	LastName     string `json:"lastName"`
+	ProfileImage string `json:"profileImage"`
 }
 
-func (u *User) BeforeCreate(*gorm.DB) (err error) {
-	if len(u.PasswordHash) > 0 {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.PasswordHash), bcrypt.DefaultCost)
-		if err != nil {
-			return err
-		}
-		u.PasswordHash = string(hashedPassword)
-	}
-	return
+type UserPrivateProfile struct {
+	Email        string `json:"email"`
+	FirstName    string `json:"firstName"`
+	LastName     string `json:"lastName"`
+	ProfileImage string `json:"profileImage"`
 }
 
 func (u *User) VerifyPassword(password string) (err error) {
 	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
 }
 
-func (u *User) SanitizeUser() *SanitizeUser {
-	return &SanitizeUser{
-		Base:         u.Base,
+func (u *User) PublicProfile() *UserPublicProfile {
+	return &UserPublicProfile{
+		FirstName:    u.FirstName,
+		LastName:     u.LastName,
+		ProfileImage: u.ProfileImage,
+	}
+}
+
+func (u *User) PrivateProfile() *UserPrivateProfile {
+	return &UserPrivateProfile{
 		Email:        u.Email,
 		FirstName:    u.FirstName,
 		LastName:     u.LastName,
 		ProfileImage: u.ProfileImage,
-		LastLogin:    u.LastLogin,
 	}
+}
+
+func HashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
+
+func ValidatePassword(password string) error {
+	var hasUpper, hasLower, hasNumber, hasSpecial bool
+	minLength := 8
+
+	if len(password) < minLength {
+		return errors.New("password must be at least 8 characters long")
+	}
+
+	for _, char := range password {
+		switch {
+		case unicode.IsUpper(char):
+			hasUpper = true
+		case unicode.IsLower(char):
+			hasLower = true
+		case unicode.IsNumber(char):
+			hasNumber = true
+		case unicode.IsPunct(char) || unicode.IsSymbol(char):
+			hasSpecial = true
+		}
+	}
+
+	if !(hasUpper && hasLower && hasNumber && hasSpecial) {
+		return errors.New("password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
+	}
+
+	return nil
 }
 
 // TableName sets the table name for the user model.

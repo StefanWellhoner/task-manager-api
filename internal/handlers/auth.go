@@ -3,11 +3,11 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/StefanWellhoner/task-manager-api/internal/errors"
 	model "github.com/StefanWellhoner/task-manager-api/internal/models"
 	repositories "github.com/StefanWellhoner/task-manager-api/internal/repository"
 	"github.com/StefanWellhoner/task-manager-api/internal/services"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 type RegisterRequest struct {
@@ -22,15 +22,16 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required"`
+}
+
 func Login(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload LoginRequest
 		if err := c.ShouldBindJSON(&payload); err != nil {
-			errors := make(map[string]string)
-			for _, fieldError := range err.(validator.ValidationErrors) {
-				errors[fieldError.Field()] = fieldError.ActualTag()
-			}
-			HandleResponse(c, http.StatusBadRequest, "Invalid login information", errors)
+			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid login information", http.StatusBadRequest))
 			return
 		}
 
@@ -41,11 +42,11 @@ func Login(db *services.GormDatabase) gin.HandlerFunc {
 
 		tokenDetails, err := userService.Authenticate(payload.Email, payload.Password)
 		if err != nil {
-			HandleResponse(c, http.StatusUnauthorized, "Invalid login information", nil)
+			HandleError(c, err)
 			return
 		}
 
-		HandleResponse(c, http.StatusOK, "Login successful", gin.H{"access_token": tokenDetails.AccessToken, "refresh_token": tokenDetails.RefreshToken})
+		HandleResponse(c, http.StatusOK, "Login successful", gin.H{"accessToken": tokenDetails.AccessToken, "refreshToken": tokenDetails.RefreshToken})
 	}
 }
 
@@ -58,11 +59,7 @@ func Logout(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload model.RefreshToken
 		if err := c.ShouldBindJSON(&payload); err != nil {
-			errors := make(map[string]string)
-			for _, fieldError := range err.(validator.ValidationErrors) {
-				errors[fieldError.Field()] = fieldError.ActualTag()
-			}
-			HandleResponse(c, http.StatusBadRequest, "Invalid refresh token", errors)
+			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid refresh token", http.StatusBadRequest))
 			return
 		}
 
@@ -70,7 +67,7 @@ func Logout(db *services.GormDatabase) gin.HandlerFunc {
 		tokenService := services.NewTokenService(tokenRepo)
 
 		if err := tokenService.DeleteRefreshToken(payload.Token); err != nil {
-			HandleResponse(c, http.StatusInternalServerError, "Failed to logout", nil)
+			HandleError(c, err)
 			return
 		}
 
@@ -80,6 +77,24 @@ func Logout(db *services.GormDatabase) gin.HandlerFunc {
 
 func ChangePassword(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var payload ChangePasswordRequest
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid password change information", http.StatusBadRequest))
+			return
+		}
+
+		userRepo := repositories.NewUserRepository(db.DB)
+		tokenRepo := repositories.NewTokenRepository(db.DB)
+		tokenService := services.NewTokenService(tokenRepo)
+		userService := services.NewUserService(userRepo, tokenService)
+
+		userID := c.GetString("userID")
+		if err := userService.ChangePassword(userID, payload.OldPassword, payload.NewPassword); err != nil {
+			HandleError(c, err)
+			return
+		}
+
+		HandleResponse(c, http.StatusOK, "Password changed successfully", nil)
 	}
 }
 
@@ -100,6 +115,23 @@ func VerifyEmail(db *services.GormDatabase) gin.HandlerFunc {
 
 func GetUserFromToken(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		userID, exists := c.Get("userID")
+		if !exists {
+			HandleError(c, errors.NewServiceError(errors.InternalError, "Something went wrong", http.StatusInternalServerError))
+			return
+		}
+
+		userRepo := repositories.NewUserRepository(db.DB)
+		tokenRepo := repositories.NewTokenRepository(db.DB)
+		tokenService := services.NewTokenService(tokenRepo)
+		userService := services.NewUserService(userRepo, tokenService)
+
+		user, err := userService.GetUserByID(userID.(string))
+		if err != nil {
+			HandleError(c, err)
+			return
+		}
+		HandleResponse(c, http.StatusOK, "User found", user.PrivateProfile())
 	}
 }
 
@@ -107,11 +139,7 @@ func Register(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload RegisterRequest
 		if err := c.ShouldBindJSON(&payload); err != nil {
-			errors := make(map[string]string)
-			for _, fieldError := range err.(validator.ValidationErrors) {
-				errors[fieldError.Field()] = fieldError.ActualTag()
-			}
-			HandleResponse(c, http.StatusBadRequest, "Invalid registration information", errors)
+			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid registration information", http.StatusBadRequest))
 			return
 		}
 
@@ -123,14 +151,10 @@ func Register(db *services.GormDatabase) gin.HandlerFunc {
 		user := model.User{Email: payload.Email, PasswordHash: payload.Password, FirstName: payload.Firstname, LastName: payload.Lastname}
 
 		if err := userService.Create(&user); err != nil {
-			if err.Error() == "user already exists" {
-				HandleResponse(c, http.StatusConflict, "User is already registered", nil)
-			} else {
-				HandleResponse(c, http.StatusInternalServerError, "Failed to register user", nil)
-			}
+			HandleError(c, err)
 			return
 		}
 
-		HandleResponse(c, http.StatusCreated, "User registered successfully", gin.H{"id": user.ID, "email": user.Email, "firstname": user.FirstName, "lastname": user.LastName})
+		HandleResponse(c, http.StatusCreated, "User registered successfully", user.PrivateProfile())
 	}
 }
