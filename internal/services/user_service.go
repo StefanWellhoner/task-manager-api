@@ -82,6 +82,10 @@ func (s *userService) ChangePassword(userID, oldPassword, newPassword string) er
 		return errors.NewServiceError(errors.NotFoundError, "User not found", http.StatusNotFound)
 	}
 
+	if oldPassword == newPassword {
+		return errors.NewServiceError(errors.ValidationError, "New password must be different from old password", http.StatusBadRequest)
+	}
+
 	if err := user.VerifyPassword(oldPassword); err != nil {
 		return errors.NewServiceError(errors.ValidationError, "Invalid old password", http.StatusBadRequest)
 	}

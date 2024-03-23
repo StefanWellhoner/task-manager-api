@@ -37,10 +37,12 @@ type UserPublicProfile struct {
 }
 
 type UserPrivateProfile struct {
-	Email        string `json:"email"`
-	FirstName    string `json:"firstName"`
-	LastName     string `json:"lastName"`
-	ProfileImage string `json:"profileImage"`
+	Email        string    `json:"email"`
+	FirstName    string    `json:"firstName"`
+	LastName     string    `json:"lastName"`
+	ProfileImage string    `json:"profileImage"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 func (u *User) VerifyPassword(password string) (err error) {
@@ -61,6 +63,8 @@ func (u *User) PrivateProfile() *UserPrivateProfile {
 		FirstName:    u.FirstName,
 		LastName:     u.LastName,
 		ProfileImage: u.ProfileImage,
+		CreatedAt:    u.CreatedAt,
+		UpdatedAt:    u.UpdatedAt,
 	}
 }
 

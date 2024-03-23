@@ -27,6 +27,14 @@ type ChangePasswordRequest struct {
 	NewPassword string `json:"new_password" binding:"required"`
 }
 
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
 func Login(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload LoginRequest
@@ -52,12 +60,7 @@ func Login(db *services.GormDatabase) gin.HandlerFunc {
 
 func Refresh(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
-	}
-}
-
-func Logout(db *services.GormDatabase) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var payload model.RefreshToken
+		var payload RefreshRequest
 		if err := c.ShouldBindJSON(&payload); err != nil {
 			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid refresh token", http.StatusBadRequest))
 			return
@@ -66,7 +69,28 @@ func Logout(db *services.GormDatabase) gin.HandlerFunc {
 		tokenRepo := repositories.NewTokenRepository(db.DB)
 		tokenService := services.NewTokenService(tokenRepo)
 
-		if err := tokenService.DeleteRefreshToken(payload.Token); err != nil {
+		
+
+		tokenDetails, err := tokenService.RefreshToken(payload.RefreshToken)
+		if err != nil {
+			HandleError(c, err)
+			return
+		}
+	}
+}
+
+func Logout(db *services.GormDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var payload LogoutRequest
+		if err := c.ShouldBindJSON(&payload); err != nil {
+			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid refresh token", http.StatusBadRequest))
+			return
+		}
+
+		tokenRepo := repositories.NewTokenRepository(db.DB)
+		tokenService := services.NewTokenService(tokenRepo)
+
+		if err := tokenService.DeleteRefreshToken(payload.RefreshToken); err != nil {
 			HandleError(c, err)
 			return
 		}
