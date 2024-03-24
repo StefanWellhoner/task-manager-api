@@ -29,7 +29,7 @@ func NewUserService(userRepo repositories.UserRepository, tokenService TokenServ
 func (s *userService) Create(user *model.User) error {
 	existingUser, _ := s.userRepository.FindByEmail(user.Email)
 	if existingUser != nil {
-		return errors.NewServiceError(errors.ConflictError, "email already in use", http.StatusConflict)
+		return errors.NewServiceError(errors.ConflictError, "Email already in use", http.StatusConflict)
 	}
 
 	if err := model.ValidatePassword(user.PasswordHash); err != nil {
@@ -48,16 +48,16 @@ func (s *userService) Create(user *model.User) error {
 func (s *userService) Authenticate(email, password string) (*TokenDetails, error) {
 	user, err := s.userRepository.FindByEmail(email)
 	if err != nil {
-		return nil, err
+		return nil, errors.NewServiceError(errors.NotFoundError, "Incorrect email or password", http.StatusUnauthorized)
 	}
 
 	if err := user.VerifyPassword(password); err != nil {
-		return nil, errors.NewServiceError(errors.ValidationError, "invalid email or password", http.StatusUnauthorized)
+		return nil, errors.NewServiceError(errors.ValidationError, "Incorrect email or password", http.StatusUnauthorized)
 	}
 
-	tokenDetails, err := s.tokenService.GenerateTokens(user)
+	tokenDetails, err := s.tokenService.GenerateTokens(user.ID)
 	if err != nil {
-		return nil, err
+		return nil, errors.NewServiceError(errors.InternalError, "Something went wrong", http.StatusInternalServerError)
 	}
 
 	user.LastLogin = time.Now()
@@ -83,11 +83,11 @@ func (s *userService) ChangePassword(userID, oldPassword, newPassword string) er
 	}
 
 	if oldPassword == newPassword {
-		return errors.NewServiceError(errors.ValidationError, "New password must be different from old password", http.StatusBadRequest)
+		return errors.NewServiceError(errors.ValidationError, "New password must be different from current password", http.StatusBadRequest)
 	}
 
 	if err := user.VerifyPassword(oldPassword); err != nil {
-		return errors.NewServiceError(errors.ValidationError, "Invalid old password", http.StatusBadRequest)
+		return errors.NewServiceError(errors.ValidationError, "Incorrect old password", http.StatusBadRequest)
 	}
 
 	if err := model.ValidatePassword(newPassword); err != nil {

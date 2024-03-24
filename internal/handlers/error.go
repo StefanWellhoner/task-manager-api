@@ -22,6 +22,8 @@ func HandleError(c *gin.Context, err error) {
 		return
 	}
 
+	print(err)
+
 	c.JSON(http.StatusInternalServerError, gin.H{
 		"type":    errors.InternalError,
 		"message": "An internal error occurred",

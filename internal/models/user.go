@@ -16,8 +16,8 @@ import (
 type User struct {
 	Base
 	Email               string               `gorm:"uniqueIndex" json:"email"`
-	PasswordHash        string               `json:"password"`
-	PasswordLastChanged time.Time            `json:"passwordLastChanged"`
+	PasswordHash        string               `json:"-"`
+	PasswordLastChanged time.Time            `json:"-"`
 	Verified            bool                 `gorm:"default:false" json:"verified"`
 	FirstName           string               `json:"firstName"`
 	LastName            string               `json:"lastName"`
@@ -79,6 +79,11 @@ func HashPassword(password string) (string, error) {
 func ValidatePassword(password string) error {
 	var hasUpper, hasLower, hasNumber, hasSpecial bool
 	minLength := 8
+	maxSize := 72
+
+	if len([]byte(password)) > maxSize {
+		return errors.New("password must be at most 72 characters long")
+	}
 
 	if len(password) < minLength {
 		return errors.New("password must be at least 8 characters long")

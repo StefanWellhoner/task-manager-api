@@ -8,6 +8,7 @@ const (
 	NotFoundError     Type = "NOT_FOUND_ERROR"
 	InternalError     Type = "INTERNAL_ERROR"
 	ConflictError     Type = "CONFLICT_ERROR"
+	NotImplemented    Type = "NOT_IMPLEMENTED"
 )
 
 type ServiceError struct {

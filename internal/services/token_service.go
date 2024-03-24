@@ -2,12 +2,15 @@ package services
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/StefanWellhoner/task-manager-api/internal/config"
+	"github.com/StefanWellhoner/task-manager-api/internal/errors"
 	model "github.com/StefanWellhoner/task-manager-api/internal/models"
 	repositories "github.com/StefanWellhoner/task-manager-api/internal/repository"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 )
 
 var (
@@ -28,10 +31,11 @@ type TokenDetails struct {
 }
 
 type TokenService interface {
-	GenerateTokens(user *model.User) (*TokenDetails, error)
+	GenerateTokens(user uuid.UUID) (*TokenDetails, error)
 	SaveRefreshToken(token *model.RefreshToken) error
 	ValidateToken(token string) (*model.RefreshToken, error)
 	DeleteRefreshToken(token string) error
+	RefreshToken(token string) (*TokenDetails, error)
 }
 
 type tokenService struct {
@@ -42,12 +46,12 @@ func NewTokenService(tokenRepo repositories.TokenRepository) TokenService {
 	return &tokenService{tokenRepository: tokenRepo}
 }
 
-func (s *tokenService) GenerateTokens(user *model.User) (*TokenDetails, error) {
+func (s *tokenService) GenerateTokens(userID uuid.UUID) (*TokenDetails, error) {
 	accessTokenClaims := &Claims{
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(AccessTokenExpiry).Unix(),
 		},
-		UserID:    user.ID.String(),
+		UserID:    userID.String(),
 		TokenType: "access",
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessTokenClaims)
@@ -60,7 +64,7 @@ func (s *tokenService) GenerateTokens(user *model.User) (*TokenDetails, error) {
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(RefreshTokenExpiry).Unix(),
 		},
-		UserID:    user.ID.String(),
+		UserID:    userID.String(),
 		TokenType: "refresh",
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
@@ -71,7 +75,7 @@ func (s *tokenService) GenerateTokens(user *model.User) (*TokenDetails, error) {
 
 	refreshTokenModel := &model.RefreshToken{
 		Token:     refreshTokenString,
-		UserID:    user.ID,
+		UserID:    userID,
 		ExpiresAt: time.Now().Add(RefreshTokenExpiry),
 	}
 
@@ -110,4 +114,22 @@ func (s *tokenService) DeleteRefreshToken(token string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *tokenService) RefreshToken(token string) (*TokenDetails, error) {
+	refreshToken, err := s.ValidateToken(token)
+	if err != nil {
+		return nil, errors.NewServiceError(errors.UnauthorizedError, "Invalid or expired token", http.StatusUnauthorized)
+	}
+
+	if err := s.DeleteRefreshToken(token); err != nil {
+		return nil, errors.NewServiceError(errors.InternalError, "Something went wrong", http.StatusInternalServerError)
+	}
+
+	newTokens, err := s.GenerateTokens(refreshToken.UserID)
+	if err != nil {
+		return nil, errors.NewServiceError(errors.InternalError, "Something went wrong", http.StatusInternalServerError)
+	}
+
+	return newTokens, nil
 }

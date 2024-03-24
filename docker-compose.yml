@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   app:
+    container_name: app
     build: .
     platform: linux/amd64
     ports:
@@ -13,6 +14,7 @@ services:
     command: ["./wait-for-it.sh", "db:5432", "--", "./taskforge"]
 
   db:
+    container_name: db
     image: postgres:latest
     ports:
       - "5432:5432"

@@ -39,7 +39,7 @@ func Login(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload LoginRequest
 		if err := c.ShouldBindJSON(&payload); err != nil {
-			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid login information", http.StatusBadRequest))
+			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid payload", http.StatusBadRequest))
 			return
 		}
 
@@ -62,20 +62,20 @@ func Refresh(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload RefreshRequest
 		if err := c.ShouldBindJSON(&payload); err != nil {
-			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid refresh token", http.StatusBadRequest))
+			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid payload", http.StatusBadRequest))
 			return
 		}
 
 		tokenRepo := repositories.NewTokenRepository(db.DB)
 		tokenService := services.NewTokenService(tokenRepo)
 
-		
-
 		tokenDetails, err := tokenService.RefreshToken(payload.RefreshToken)
 		if err != nil {
 			HandleError(c, err)
 			return
 		}
+
+		HandleResponse(c, http.StatusOK, "Token refreshed", gin.H{"accessToken": tokenDetails.AccessToken, "refreshToken": tokenDetails.RefreshToken})
 	}
 }
 
@@ -83,7 +83,7 @@ func Logout(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload LogoutRequest
 		if err := c.ShouldBindJSON(&payload); err != nil {
-			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid refresh token", http.StatusBadRequest))
+			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid payload", http.StatusBadRequest))
 			return
 		}
 
@@ -103,7 +103,7 @@ func ChangePassword(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload ChangePasswordRequest
 		if err := c.ShouldBindJSON(&payload); err != nil {
-			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid password change information", http.StatusBadRequest))
+			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid payload", http.StatusBadRequest))
 			return
 		}
 
@@ -124,26 +124,25 @@ func ChangePassword(db *services.GormDatabase) gin.HandlerFunc {
 
 func ResetPassword(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		HandleError(c, errors.NewServiceError(errors.NotImplemented, "Not implemented", http.StatusNotImplemented))
 	}
 }
 
 func ResetPasswordConfirm(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		HandleError(c, errors.NewServiceError(errors.NotImplemented, "Not implemented", http.StatusNotImplemented))
 	}
 }
 
 func VerifyEmail(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		HandleError(c, errors.NewServiceError(errors.NotImplemented, "Not implemented", http.StatusNotImplemented))
 	}
 }
 
 func GetUserFromToken(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID, exists := c.Get("userID")
-		if !exists {
-			HandleError(c, errors.NewServiceError(errors.InternalError, "Something went wrong", http.StatusInternalServerError))
-			return
-		}
+		userID, _ := c.Get("userID")
 
 		userRepo := repositories.NewUserRepository(db.DB)
 		tokenRepo := repositories.NewTokenRepository(db.DB)
@@ -163,7 +162,7 @@ func Register(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload RegisterRequest
 		if err := c.ShouldBindJSON(&payload); err != nil {
-			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid registration information", http.StatusBadRequest))
+			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid payload", http.StatusBadRequest))
 			return
 		}
 

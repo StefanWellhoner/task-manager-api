@@ -28,25 +28,30 @@ func registerRoutes(router *gin.Engine) {
 	{
 		authGroup.POST("/register", handlers.Register(db))
 		authGroup.POST("/login", handlers.Login(db))
-		authGroup.GET("/refresh", handlers.Refresh(db))
+		authGroup.POST("/refresh", handlers.Refresh(db))
+		authGroup.POST("/password/reset", handlers.ResetPassword(db))
+		authGroup.POST("/password/reset/confirm", handlers.ResetPasswordConfirm(db))
+		authGroup.POST("/email/verify", handlers.VerifyEmail(db))
 
 		authGroup.Use(middleware.Auth())
 		{
 			authGroup.POST("/logout", handlers.Logout(db))
 			authGroup.POST("/password/change", handlers.ChangePassword(db))
-			authGroup.POST("/password/reset", handlers.ResetPassword(db))
-			authGroup.POST("/password/reset/confirm", handlers.ResetPasswordConfirm(db))
-			authGroup.POST("/verify/email", handlers.VerifyEmail(db))
 			authGroup.GET("/me", handlers.GetUserFromToken(db))
 		}
 	}
 
 	userGroup := router.Group("/users").Use(middleware.Auth())
 	{
-		userGroup.GET("/", handlers.GetUsers)
+		userGroup.GET("/", handlers.GetUsers(db))
 		userGroup.GET("/:id", handlers.GetUser(db))
-		userGroup.PUT("/:id", handlers.UpdateUser)
-		userGroup.DELETE("/:id", handlers.DeleteUser)
+		userGroup.PUT("/:id", handlers.UpdateUser(db))
+		userGroup.DELETE("/:id", handlers.DeleteUser(db))
+	}
+
+	workspaceGroup := router.Group("/workspaces").Use(middleware.Auth())
+	{
+		workspaceGroup.POST("/", handlers.CreateWorkspace(db))
 	}
 
 	taskGroup := router.Group("/tasks").Use(middleware.Auth())
