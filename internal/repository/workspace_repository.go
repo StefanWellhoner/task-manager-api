@@ -2,6 +2,7 @@ package repositories
 
 import (
 	models "github.com/StefanWellhoner/task-manager-api/internal/models"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -25,4 +26,14 @@ func (r *WorkspaceRepository) Create(workspace *models.Workspace) error {
 	}
 
 	return tx.Commit().Error
+}
+
+func (r *WorkspaceRepository) GetWorkspaces(userID uuid.UUID) ([]models.Workspace, error) {
+	var workspaces []models.Workspace
+
+	if err := r.db.Where("owner_user_id = ?", userID).Find(&workspaces).Error; err != nil {
+		return nil, err
+	}
+
+	return workspaces, nil
 }

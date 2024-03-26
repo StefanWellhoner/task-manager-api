@@ -50,10 +50,6 @@ func New(config *config.Configuration) (*GormDatabase, error) {
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetConnMaxLifetime(0)
 
-	if err = db.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"").Error; err != nil {
-		return nil, fmt.Errorf("failed to create uuid-ossp extension: %w", err)
-	}
-
 	if err := db.AutoMigrate(
 		new(model.User),
 		new(model.Task),

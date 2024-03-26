@@ -3,6 +3,7 @@ package services
 import (
 	models "github.com/StefanWellhoner/task-manager-api/internal/models"
 	repositories "github.com/StefanWellhoner/task-manager-api/internal/repository"
+	"github.com/google/uuid"
 )
 
 // WorkspaceService is the service for the workspace model.
@@ -18,4 +19,8 @@ func NewWorkspaceService(workspaceRepo *repositories.WorkspaceRepository) *Works
 // Create creates a new workspace in the database.
 func (s *WorkspaceService) Create(workspace *models.Workspace) error {
 	return s.workspaceRepo.Create(workspace)
+}
+
+func (s *WorkspaceService) GetWorkspaces(userID uuid.UUID) ([]models.Workspace, error) {
+	return s.workspaceRepo.GetWorkspaces(userID)
 }

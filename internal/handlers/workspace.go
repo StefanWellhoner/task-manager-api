@@ -11,13 +11,6 @@ import (
 	"github.com/google/uuid"
 )
 
-type WorkspaceResponse struct {
-	ID          uuid.UUID                `json:"id"`
-	Title       string                   `json:"title"`
-	Description string                   `json:"description"`
-	Owner       models.UserPublicProfile `json:"owner"`
-}
-
 type CreateWorkspaceRequest struct {
 	Title       string `json:"title" binding:"required"`
 	Description string `json:"description"`
@@ -52,5 +45,26 @@ func CreateWorkspace(db *services.GormDatabase) gin.HandlerFunc {
 		}
 
 		HandleResponse(c, http.StatusCreated, "Workspace created", workspace)
+	}
+}
+
+func GetWorkspaces(db *services.GormDatabase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, err := uuid.Parse(c.GetString("userID"))
+		if err != nil {
+			HandleError(c, errors.NewServiceError(errors.InternalError, "Something went wrong", http.StatusInternalServerError))
+			return
+		}
+
+		workspaceRepo := repositories.NewWorkspaceRepository(db.DB)
+		workspaceService := services.NewWorkspaceService(workspaceRepo)
+
+		workspaces, err := workspaceService.GetWorkspaces(userID)
+		if err != nil {
+			HandleError(c, errors.NewServiceError(errors.InternalError, "Failed to get workspaces", http.StatusInternalServerError))
+			return
+		}
+
+		HandleResponse(c, http.StatusOK, "Workspaces retrieved", workspaces)
 	}
 }

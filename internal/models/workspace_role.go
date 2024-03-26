@@ -1,11 +1,13 @@
 package model
 
+import "github.com/google/uuid"
+
 type WorkspaceRole struct {
 	Base
-	WorkspaceID uint
+	WorkspaceID uuid.UUID
 	Workspace   Workspace `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	UserID      uint
+	UserID      uuid.UUID
 	User        User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	RoleID      uint
+	RoleID      uuid.UUID
 	Role        Role `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

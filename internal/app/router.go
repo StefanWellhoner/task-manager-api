@@ -52,6 +52,7 @@ func registerRoutes(router *gin.Engine) {
 	workspaceGroup := router.Group("/workspaces").Use(middleware.Auth())
 	{
 		workspaceGroup.POST("/", handlers.CreateWorkspace(db))
+		workspaceGroup.GET("/", handlers.GetWorkspaces(db))
 	}
 
 	taskGroup := router.Group("/tasks").Use(middleware.Auth())
