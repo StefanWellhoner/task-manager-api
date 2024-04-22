@@ -8,7 +8,7 @@ import (
 	"github.com/StefanWellhoner/task-manager-api/internal/config"
 	"github.com/StefanWellhoner/task-manager-api/internal/errors"
 	model "github.com/StefanWellhoner/task-manager-api/internal/models"
-	repositories "github.com/StefanWellhoner/task-manager-api/internal/repository"
+	repositories "github.com/StefanWellhoner/task-manager-api/internal/repositories"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 )

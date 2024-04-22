@@ -7,7 +7,7 @@ import (
 	"github.com/StefanWellhoner/task-manager-api/internal/errors"
 
 	model "github.com/StefanWellhoner/task-manager-api/internal/models"
-	repositories "github.com/StefanWellhoner/task-manager-api/internal/repository"
+	repositories "github.com/StefanWellhoner/task-manager-api/internal/repositories"
 )
 
 type UserService interface {

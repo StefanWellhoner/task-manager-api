@@ -2,6 +2,8 @@ package model
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Task struct {
@@ -12,12 +14,12 @@ type Task struct {
 	Status      string
 	Priority    string
 	CompletedAt time.Time
-	CategoryID  uint
-	Category    Category `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	WorkspaceID uint
-	Workspace   Workspace `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	UserID      uint
-	User        User             `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	Assignments []TaskAssignment `gorm:"foreignKey:TaskID"`
-	Reminders   []Reminder       `gorm:"foreignKey:TaskID"`
+	CategoryID  uuid.UUID  `gorm:"type:uuid;not null;"`
+	CreatorID   uuid.UUID  `gorm:"type:uuid;not null"`
+	WorkspaceID uuid.UUID  `gorm:"type:uuid;not null"`
+	Creator     User       `gorm:"foreignKey:CreatorID;"`
+	Category    Category   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Workspace   Workspace  `gorm:"foreignKey:WorkspaceID"`
+	Reminders   []Reminder `gorm:"foreignKey:TaskID"`
+	Users       []User     `gorm:"many2many:user_tasks;"`
 }

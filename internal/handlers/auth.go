@@ -3,9 +3,10 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/StefanWellhoner/task-manager-api/internal/dto"
 	"github.com/StefanWellhoner/task-manager-api/internal/errors"
 	model "github.com/StefanWellhoner/task-manager-api/internal/models"
-	repositories "github.com/StefanWellhoner/task-manager-api/internal/repository"
+	repositories "github.com/StefanWellhoner/task-manager-api/internal/repositories"
 	"github.com/StefanWellhoner/task-manager-api/internal/services"
 	"github.com/gin-gonic/gin"
 )
@@ -27,12 +28,16 @@ type ChangePasswordRequest struct {
 	NewPassword string `json:"new_password" binding:"required"`
 }
 
-type LogoutRequest struct {
-	RefreshToken string `json:"refresh_token" binding:"required"`
+func setAuthCookie(c *gin.Context, tokenDetails *services.TokenDetails) {
+	c.SetCookie("access_token", tokenDetails.AccessToken, 60*15, "/", "", true, true)
+	c.SetCookie("refresh_token", tokenDetails.RefreshToken, 60*60*24*7, "/", "", true, true)
+	c.SetSameSite(http.SameSiteStrictMode)
 }
 
-type RefreshRequest struct {
-	RefreshToken string `json:"refresh_token" binding:"required"`
+func revokeAuthCookie(c *gin.Context) {
+	c.SetCookie("access_token", "", -1, "/", "", true, true)
+	c.SetCookie("refresh_token", "", -1, "/", "", true, true)
+	c.SetSameSite(http.SameSiteStrictMode)
 }
 
 func Login(db *services.GormDatabase) gin.HandlerFunc {
@@ -54,46 +59,46 @@ func Login(db *services.GormDatabase) gin.HandlerFunc {
 			return
 		}
 
-		HandleResponse(c, http.StatusOK, "Login successful", gin.H{"accessToken": tokenDetails.AccessToken, "refreshToken": tokenDetails.RefreshToken})
+		setAuthCookie(c, tokenDetails)
+
+		HandleResponse(c, http.StatusOK, "Login successful", nil)
 	}
 }
 
 func Refresh(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var payload RefreshRequest
-		if err := c.ShouldBindJSON(&payload); err != nil {
-			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid payload", http.StatusBadRequest))
+		refreshToken, err := c.Cookie("refresh_token")
+		if err != nil {
+			HandleError(c, errors.NewServiceError(errors.ValidationError, "Refresh token not found", http.StatusBadRequest))
 			return
 		}
 
 		tokenRepo := repositories.NewTokenRepository(db.DB)
 		tokenService := services.NewTokenService(tokenRepo)
 
-		tokenDetails, err := tokenService.RefreshToken(payload.RefreshToken)
+		tokenDetails, err := tokenService.RefreshToken(refreshToken)
 		if err != nil {
 			HandleError(c, err)
 			return
 		}
 
-		HandleResponse(c, http.StatusOK, "Token refreshed", gin.H{"accessToken": tokenDetails.AccessToken, "refreshToken": tokenDetails.RefreshToken})
+		setAuthCookie(c, tokenDetails)
+
+		HandleResponse(c, http.StatusOK, "Token refreshed", nil)
 	}
 }
 
 func Logout(db *services.GormDatabase) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var payload LogoutRequest
-		if err := c.ShouldBindJSON(&payload); err != nil {
-			HandleError(c, errors.NewServiceError(errors.ValidationError, "Invalid payload", http.StatusBadRequest))
-			return
+		refreshToken, err := c.Cookie("refresh_token")
+
+		if err == nil {
+			tokenRepo := repositories.NewTokenRepository(db.DB)
+			tokenService := services.NewTokenService(tokenRepo)
+			_ = tokenService.DeleteRefreshToken(refreshToken)
 		}
 
-		tokenRepo := repositories.NewTokenRepository(db.DB)
-		tokenService := services.NewTokenService(tokenRepo)
-
-		if err := tokenService.DeleteRefreshToken(payload.RefreshToken); err != nil {
-			HandleError(c, err)
-			return
-		}
+		revokeAuthCookie(c)
 
 		HandleResponse(c, http.StatusOK, "Logout successful", nil)
 	}
@@ -154,7 +159,7 @@ func GetUserFromToken(db *services.GormDatabase) gin.HandlerFunc {
 			HandleError(c, err)
 			return
 		}
-		HandleResponse(c, http.StatusOK, "User found", user.PrivateProfile())
+		HandleResponse(c, http.StatusOK, "User found", dto.ToUserPrivateDTO(user))
 	}
 }
 
@@ -178,6 +183,6 @@ func Register(db *services.GormDatabase) gin.HandlerFunc {
 			return
 		}
 
-		HandleResponse(c, http.StatusCreated, "User registered successfully", user.PrivateProfile())
+		HandleResponse(c, http.StatusCreated, "User registered successfully", dto.ToUserPrivateDTO(&user))
 	}
 }

@@ -23,49 +23,16 @@ type User struct {
 	LastName            string               `json:"lastName"`
 	ProfileImage        string               `json:"profileImage"`
 	LastLogin           time.Time            `json:"lastLogin"`
-	Tasks               []Task               `gorm:"foreignKey:UserID" json:"tasks"`
-	OwnedWorkspaces     []Workspace          `gorm:"foreignKey:OwnerUserID" json:"ownedWorkspaces"`
-	WorkspaceRoles      []WorkspaceRole      `gorm:"many2many:workspace_roles;" json:"workspaceRoles"`
-	RefreshTokens       []RefreshToken       `gorm:"foreignKey:UserID" json:"refreshTokens"`
-	PasswordResetTokens []PasswordResetToken `gorm:"foreignKey:UserID" json:"passwordResetTokens"`
-}
-
-type UserPublicProfile struct {
-	FirstName    string `json:"firstName"`
-	LastName     string `json:"lastName"`
-	ProfileImage string `json:"profileImage"`
-}
-
-type UserPrivateProfile struct {
-	Email        string    `json:"email"`
-	FirstName    string    `json:"firstName"`
-	LastName     string    `json:"lastName"`
-	ProfileImage string    `json:"profileImage"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
+	RefreshTokens       []RefreshToken       `gorm:"foreignKey:UserID" json:"-"`
+	PasswordResetTokens []PasswordResetToken `gorm:"foreignKey:UserID" json:"-"`
+	OwnedWorkspaces     []Workspace          `gorm:"foreignKey:OwnerID" json:"ownedWorkspaces"`
+	Tasks               []Task               `gorm:"many2many:user_tasks;"`
+	Workspaces          []Workspace          `gorm:"many2many:workspace_members;"`
+	UserRoleWorkspaces  []WorkspaceRole      `gorm:"foreignKey:UserID"`
 }
 
 func (u *User) VerifyPassword(password string) (err error) {
 	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password))
-}
-
-func (u *User) PublicProfile() *UserPublicProfile {
-	return &UserPublicProfile{
-		FirstName:    u.FirstName,
-		LastName:     u.LastName,
-		ProfileImage: u.ProfileImage,
-	}
-}
-
-func (u *User) PrivateProfile() *UserPrivateProfile {
-	return &UserPrivateProfile{
-		Email:        u.Email,
-		FirstName:    u.FirstName,
-		LastName:     u.LastName,
-		ProfileImage: u.ProfileImage,
-		CreatedAt:    u.CreatedAt,
-		UpdatedAt:    u.UpdatedAt,
-	}
 }
 
 func HashPassword(password string) (string, error) {
