@@ -21,7 +21,7 @@ server:
       renewbefore: 30
 
 database:
-  host: "localhost"
+  host: "db"
   port: 5432
   user: "taskforge_user"
   password: vUFl8tw2s9i8kIyw

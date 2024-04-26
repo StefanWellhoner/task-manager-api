@@ -14,7 +14,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o taskforge main.go
+RUN go build -o taskforge ./cmd/api/main.go
 
 # Stage 2: Create a minimal image to run the Go binary
 FROM amd64/debian:stable-slim
