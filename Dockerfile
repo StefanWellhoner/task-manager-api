@@ -1,7 +1,9 @@
 # Stage 1: Build the Go binary
 FROM golang:latest AS builder
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update \
+    && apt-get install -y \
+    && apt-get install -y dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
 LABEL maintainer="StefanWellhoner <stefanwellhoner@ymail.com>"
@@ -14,7 +16,9 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o taskforge main.go
+RUN dos2unix wait-for-it.sh
+
+RUN go build -o taskforge ./cmd/api/main.go
 
 # Stage 2: Create a minimal image to run the Go binary
 FROM amd64/debian:stable-slim

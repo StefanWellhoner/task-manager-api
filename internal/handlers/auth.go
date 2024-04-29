@@ -29,13 +29,11 @@ type ChangePasswordRequest struct {
 }
 
 func setAuthCookie(c *gin.Context, tokenDetails *services.TokenDetails) {
-	c.SetCookie("access_token", tokenDetails.AccessToken, 60*15, "/", "", true, true)
 	c.SetCookie("refresh_token", tokenDetails.RefreshToken, 60*60*24*7, "/", "", true, true)
 	c.SetSameSite(http.SameSiteStrictMode)
 }
 
 func revokeAuthCookie(c *gin.Context) {
-	c.SetCookie("access_token", "", -1, "/", "", true, true)
 	c.SetCookie("refresh_token", "", -1, "/", "", true, true)
 	c.SetSameSite(http.SameSiteStrictMode)
 }
@@ -61,7 +59,7 @@ func Login(db *services.GormDatabase) gin.HandlerFunc {
 
 		setAuthCookie(c, tokenDetails)
 
-		HandleResponse(c, http.StatusOK, "Login successful", nil)
+		HandleResponse(c, http.StatusOK, "Login successful", gin.H{"access_token": tokenDetails.AccessToken, "expiresIn": 60 * 15, "token_type": "Bearer"})
 	}
 }
 
@@ -84,7 +82,7 @@ func Refresh(db *services.GormDatabase) gin.HandlerFunc {
 
 		setAuthCookie(c, tokenDetails)
 
-		HandleResponse(c, http.StatusOK, "Token refreshed", nil)
+		HandleResponse(c, http.StatusOK, "Token refreshed", gin.H{"access_token": tokenDetails.AccessToken, "expiresIn": 60 * 15, "token_type": "Bearer"})
 	}
 }
 
