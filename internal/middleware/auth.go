@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/StefanWellhoner/task-manager-api/internal/config"
 	"github.com/StefanWellhoner/task-manager-api/internal/handlers"
@@ -11,28 +12,28 @@ import (
 
 var jwtSecret = []byte(config.Get().Secrets.Jwt)
 
-// func extractTokenFromHeader(c *gin.Context) (string, error) {
-// 	authHeader := c.GetHeader("Authorization")
-// 	if authHeader == "" {
-// 		return "", fmt.Errorf("no authorization header provided")
-// 	}
-
-// 	bearerToken := strings.Split(authHeader, " ")
-// 	if len(bearerToken) != 2 {
-// 		return "", fmt.Errorf("invalid authorization header format")
-// 	}
-
-// 	return bearerToken[1], nil
-// }
-
-func extractTokenFromCookie(c *gin.Context) (string, error) {
-	accessToken, err := c.Cookie("access_token")
-	if err != nil {
-		return "", fmt.Errorf("no token provided")
+func extractTokenFromHeader(c *gin.Context) (string, error) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		return "", fmt.Errorf("no authorization header provided")
 	}
 
-	return accessToken, nil
+	bearerToken := strings.Split(authHeader, " ")
+	if len(bearerToken) != 2 {
+		return "", fmt.Errorf("invalid authorization header format")
+	}
+
+	return bearerToken[1], nil
 }
+
+// func extractTokenFromCookie(c *gin.Context) (string, error) {
+// 	accessToken, err := c.Cookie("access_token")
+// 	if err != nil {
+// 		return "", fmt.Errorf("no token provided")
+// 	}
+
+// 	return accessToken, nil
+// }
 
 func validateToken(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -66,7 +67,7 @@ func parseTokenClaims(token *jwt.Token) (jwt.MapClaims, error) {
 
 func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString, err := extractTokenFromCookie(c)
+		tokenString, err := extractTokenFromHeader(c)
 		if err != nil {
 			handlers.HandleResponse(c, 401, "Unauthorized", err.Error())
 			c.Abort()
