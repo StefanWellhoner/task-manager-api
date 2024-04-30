@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/StefanWellhoner/task-manager-api/internal/dto"
 	"github.com/StefanWellhoner/task-manager-api/internal/errors"
@@ -59,7 +60,11 @@ func Login(db *services.GormDatabase) gin.HandlerFunc {
 
 		setAuthCookie(c, tokenDetails)
 
+<<<<<<< HEAD
 		HandleResponse(c, http.StatusOK, "Login successful", gin.H{"access_token": tokenDetails.AccessToken, "expiresIn": 60 * 15, "token_type": "Bearer"})
+=======
+		HandleResponse(c, http.StatusOK, "Login successful", gin.H{"access_token": tokenDetails.AccessToken, "expires_in": 15 * time.Minute, "token_type": "Bearer"})
+>>>>>>> 8d3c0a09c94c9b34fb9749105689df6470ff6039
 	}
 }
 
@@ -82,7 +87,11 @@ func Refresh(db *services.GormDatabase) gin.HandlerFunc {
 
 		setAuthCookie(c, tokenDetails)
 
+<<<<<<< HEAD
 		HandleResponse(c, http.StatusOK, "Token refreshed", gin.H{"access_token": tokenDetails.AccessToken, "expiresIn": 60 * 15, "token_type": "Bearer"})
+=======
+		HandleResponse(c, http.StatusOK, "Token refreshed", gin.H{"access_token": tokenDetails.AccessToken, "expires_in": 15 * time.Minute, "token_type": "Bearer"})
+>>>>>>> 8d3c0a09c94c9b34fb9749105689df6470ff6039
 	}
 }
 
